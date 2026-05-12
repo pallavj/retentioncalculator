@@ -9,12 +9,10 @@ function createPrisma() {
 
   // Neon / Postgres (production) — HTTP transport, no WebSocket needed
   if (dbUrl && (dbUrl.startsWith('postgresql://') || dbUrl.startsWith('postgres://'))) {
-    const { neon } = require('@neondatabase/serverless')
     const { PrismaNeonHttp } = require('@prisma/adapter-neon')
     // Strip channel_binding — not supported by Neon HTTP driver
     const connectionString = dbUrl.replace(/[&?]channel_binding=[^&]*/g, '')
-    const sql = neon(connectionString)
-    const adapter = new PrismaNeonHttp(sql)
+    const adapter = new PrismaNeonHttp(connectionString)
     return new PrismaClient({ adapter })
   }
 
