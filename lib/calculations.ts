@@ -9,6 +9,7 @@ export interface CalcInputs {
 export interface CalcResults {
   monthlyOrders: number
   monthlyNewCustomers: number
+  monthlyNewRevenue: number
   monthlyRepeatCustomers: number
   monthlyDormantCustomers: number
   monthlyRepeatRevenue: number
@@ -28,6 +29,7 @@ export function calculate(inputs: CalcInputs): CalcResults {
 
   const monthlyOrders = Math.round(monthlyTraffic * conversionRate)
   const monthlyNewCustomers = monthlyOrders
+  const monthlyNewRevenue = monthlyNewCustomers * aov
   const monthlyRepeatCustomers = Math.round(existingBase * repeatRate)
   const monthlyDormantCustomers = existingBase - monthlyRepeatCustomers
   const monthlyRepeatRevenue = monthlyRepeatCustomers * aov
@@ -47,6 +49,7 @@ export function calculate(inputs: CalcInputs): CalcResults {
   return {
     monthlyOrders,
     monthlyNewCustomers,
+    monthlyNewRevenue,
     monthlyRepeatCustomers,
     monthlyDormantCustomers,
     monthlyRepeatRevenue,

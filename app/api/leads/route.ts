@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
 
   // Fire emails concurrently, don't block the response
   Promise.all([
-    sendReportEmail(emailPayload),
+    sendReportEmail(emailPayload).catch((e) => console.error('[leads] sendReportEmail failed:', e?.message ?? e)),
     sendLeadAlert({
       leadId: lead.id,
       brandName: submission.brandName ?? submission.brandUrl,
@@ -88,8 +88,8 @@ export async function POST(req: NextRequest) {
       repeatRate: inputs.repeatRate,
       totalLow: results.totalLow,
       totalHigh: results.totalHigh,
-    }),
-  ]).catch(console.error)
+    }).catch((e) => console.error('[leads] sendLeadAlert failed:', e?.message ?? e)),
+  ])
 
   return NextResponse.json({ leadId: lead.id })
 }

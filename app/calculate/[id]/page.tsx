@@ -380,14 +380,14 @@ function ResultsStep({
         <div className="divide-y" style={{ borderColor: 'var(--shopify-border)' }}>
           {[
             {
-              label: 'Monthly Orders',
-              value: results.monthlyOrders.toLocaleString('en-IN'),
+              label: 'Monthly New Customers',
+              value: results.monthlyNewCustomers.toLocaleString('en-IN'),
               calc: `${inputs.monthlyTraffic.toLocaleString('en-IN')} sessions × ${(inputs.conversionRate * 100).toFixed(1)}% conversion`,
             },
             {
-              label: 'Monthly New Customers',
-              value: results.monthlyNewCustomers.toLocaleString('en-IN'),
-              calc: `Same as monthly orders — all new to the brand`,
+              label: 'Monthly New Revenue',
+              value: formatCurrency(results.monthlyNewRevenue),
+              calc: `${results.monthlyNewCustomers.toLocaleString('en-IN')} new customers × ${formatCurrency(inputs.aov)} AOV`,
             },
             {
               label: 'Monthly Repeat Customers',
@@ -395,15 +395,15 @@ function ResultsStep({
               calc: `${inputs.existingBase.toLocaleString('en-IN')} base × ${(inputs.repeatRate * 100).toFixed(0)}% repeat rate`,
             },
             {
+              label: 'Monthly Repeat Revenue',
+              value: formatCurrency(results.monthlyRepeatRevenue),
+              calc: `${results.monthlyRepeatCustomers.toLocaleString('en-IN')} repeat customers × ${formatCurrency(inputs.aov)} AOV`,
+            },
+            {
               label: 'Monthly Dormant Customers',
               value: results.monthlyDormantCustomers.toLocaleString('en-IN'),
               calc: `${inputs.existingBase.toLocaleString('en-IN')} base − ${results.monthlyRepeatCustomers.toLocaleString('en-IN')} active = ${results.monthlyDormantCustomers.toLocaleString('en-IN')} who've gone silent`,
               highlight: true,
-            },
-            {
-              label: 'Monthly Repeat Revenue',
-              value: formatCurrency(results.monthlyRepeatRevenue),
-              calc: `${results.monthlyRepeatCustomers.toLocaleString('en-IN')} repeat customers × ${formatCurrency(inputs.aov)} AOV`,
             },
           ].map((row) => (
             <div key={row.label} className="px-6 py-4">
