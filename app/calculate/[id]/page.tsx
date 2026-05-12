@@ -516,8 +516,19 @@ function Field({
   highlight?: boolean
   placeholder?: string
 }) {
+  const [localVal, setLocalVal] = useState(String(value))
+
+  // Sync when parent resets (e.g. initial load)
+  useEffect(() => { setLocalVal(String(value)) }, [value])
+
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const raw = e.target.value
+    setLocalVal(raw)
+    onChange(raw)
+  }
+
   return (
-    <div className={`rounded-xl p-4 ${highlight ? '' : ''}`}
+    <div className="rounded-xl p-4"
       style={highlight ? { background: 'var(--shopify-green-light)', border: '1.5px solid var(--shopify-green)' } : {}}>
       <div className="flex items-center justify-between mb-2">
         <label className="text-sm font-semibold" style={{ color: highlight ? 'var(--shopify-green)' : 'var(--shopify-text)' }}>
@@ -536,10 +547,10 @@ function Field({
         style={{ borderColor: highlight ? 'rgba(0,128,96,0.3)' : 'var(--shopify-border)', background: 'var(--shopify-white)' }}>
         {prefix && <span className="px-3 text-sm font-medium" style={{ color: 'var(--shopify-subdued)' }}>{prefix}</span>}
         <input
-          type="number"
-          defaultValue={value || undefined}
-          key={value}
-          onChange={(e) => onChange(e.target.value)}
+          type="text"
+          inputMode="numeric"
+          value={localVal}
+          onChange={handleChange}
           placeholder={placeholder}
           className="flex-1 px-3 py-3 text-sm outline-none bg-transparent font-medium"
           style={{ color: 'var(--shopify-text)' }}
