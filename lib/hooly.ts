@@ -6,12 +6,12 @@ export interface TrafficData {
   country: string | null
 }
 
-export async function getTrafficData(domain: string): Promise<TrafficData | null> {
+export async function getTrafficData(domainOrUrl: string): Promise<TrafficData | null> {
   const apiKey = process.env.HOOLY_API_KEY
   if (!apiKey || apiKey === 'your_hooly_api_key_here') return null
 
   try {
-    const clean = domain.replace(/^https?:\/\//, '').replace(/\/$/, '').split('/')[0]
+    const clean = domainOrUrl.replace(/^https?:\/\//, '').replace(/\/$/, '').split('/')[0]
 
     const res = await fetch(`https://website-traffic2.p.rapidapi.com/info?domain=${clean}`, {
       headers: {
@@ -23,21 +23,23 @@ export async function getTrafficData(domain: string): Promise<TrafficData | null
     })
 
     if (!res.ok) return null
-    const data = await res.json()
-    if (data.message) return null // API error (e.g. not subscribed)
+    const json = await res.json()
+    if (json.message || !json.data) return null
 
-    // RapidAPI website-traffic2 response shape
+    const d = json.data
+
+    // Average the last 3 months of visits
+    const visitEntries = Object.values(d.visits ?? {}) as number[]
+    const recent = visitEntries.slice(-3)
+    const monthlyVisits =
+      recent.length > 0 ? Math.round(recent.reduce((a, b) => a + b, 0) / recent.length) : 0
+
     return {
-      monthlyVisits:
-        data.monthly_visits ??
-        data.monthlyVisits ??
-        data.visits_per_month ??
-        data.total_visits ??
-        0,
-      globalRank: data.global_rank ?? data.globalRank ?? null,
-      category: data.category ?? data.main_category ?? null,
-      bounceRate: data.bounce_rate ?? data.bounceRate ?? null,
-      country: data.country ?? data.top_country ?? null,
+      monthlyVisits,
+      globalRank: d.rank?.global?.rank ?? null,
+      category: d.category ?? null,
+      bounceRate: d.bounce ?? null,
+      country: d.top_country_shares?.[0]?.country_name ?? null,
     }
   } catch {
     return null
