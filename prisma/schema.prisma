@@ -1,0 +1,60 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Lead {
+  id        String   @id @default(cuid())
+  email     String
+  brandUrl  String
+  brandName String?
+  industry  String?
+
+  monthlyTraffic Int
+  conversionRate Float
+  aov            Float
+  existingBase   Int
+  repeatRate     Float
+
+  opp1Low   Float
+  opp1High  Float
+  opp2Low   Float
+  opp2High  Float
+  opp3Low   Float
+  opp3High  Float
+  totalLow  Float
+  totalHigh Float
+
+  followUpSent Boolean  @default(false)
+  createdAt    DateTime @default(now())
+}
+
+model Submission {
+  id        String   @id @default(cuid())
+  brandUrl  String
+  brandName String?
+  industry  String?
+
+  monthlyTraffic Int
+  conversionRate Float
+  aov            Float
+  existingBase   Int
+  repeatRate     Float
+
+  opp1Low   Float
+  opp1High  Float
+  opp2Low   Float
+  opp2High  Float
+  opp3Low   Float
+  opp3High  Float
+  totalLow  Float
+  totalHigh Float
+
+  emailCaptured Boolean  @default(false)
+  leadId        String?
+  createdAt     DateTime @default(now())
+}
