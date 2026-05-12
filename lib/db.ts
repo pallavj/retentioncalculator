@@ -5,12 +5,11 @@ const globalForPrisma = globalThis as unknown as { prisma: PrismaClient }
 function createPrisma() {
   const dbUrl = process.env.DATABASE_URL
 
-  // Neon / Postgres (production)
+  // Neon / Postgres (production) — use HTTP fetch, no WebSocket needed
   if (dbUrl && (dbUrl.startsWith('postgresql://') || dbUrl.startsWith('postgres://'))) {
     const { Pool, neonConfig } = require('@neondatabase/serverless')
     const { PrismaNeon } = require('@prisma/adapter-neon')
-    const ws = require('ws')
-    neonConfig.webSocketConstructor = ws
+    neonConfig.poolQueryViaFetch = true // HTTP mode — works in all serverless envs
     const pool = new Pool({ connectionString: dbUrl })
     const adapter = new PrismaNeon(pool)
     return new PrismaClient({ adapter })
