@@ -1,6 +1,4 @@
 import { PrismaClient } from '@prisma/client'
-import { Pool, neonConfig } from '@neondatabase/serverless'
-import { PrismaNeon } from '@prisma/adapter-neon'
 import { PrismaLibSql } from '@prisma/adapter-libsql'
 import path from 'path'
 
@@ -9,17 +7,14 @@ const globalForPrisma = globalThis as unknown as { prisma: PrismaClient }
 function createPrisma() {
   const dbUrl = process.env.DATABASE_URL
 
-  // Neon / Postgres (production)
+  // Neon / Postgres (production) — HTTP transport, no WebSocket needed
   if (dbUrl && (dbUrl.startsWith('postgresql://') || dbUrl.startsWith('postgres://'))) {
-    // Use WebSocket in Node.js runtime (Vercel serverless)
-    if (typeof WebSocket === 'undefined') {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      neonConfig.webSocketConstructor = require('ws')
-    }
-    // Strip channel_binding param — not supported by all Neon driver versions
+    const { neon } = require('@neondatabase/serverless')
+    const { PrismaNeonHttp } = require('@prisma/adapter-neon')
+    // Strip channel_binding — not supported by Neon HTTP driver
     const connectionString = dbUrl.replace(/[&?]channel_binding=[^&]*/g, '')
-    const pool = new Pool({ connectionString })
-    const adapter = new PrismaNeon(pool)
+    const sql = neon(connectionString)
+    const adapter = new PrismaNeonHttp(sql)
     return new PrismaClient({ adapter })
   }
 
