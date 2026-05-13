@@ -4,7 +4,7 @@ import LeadAlertEmail from '@/emails/LeadAlertEmail'
 
 const ALERT_EMAIL = process.env.ALERT_EMAIL ?? 'pallavjhawar@gmail.com'
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost:3001'
-const FROM = process.env.EMAIL_FROM ?? 'DTC Retention Calculator <onboarding@resend.dev>'
+const FROM = process.env.EMAIL_FROM ?? 'DTC Retention Calculator <hello@amplifyai.guru>'
 
 function isEmailEnabled() {
   const key = process.env.RESEND_API_KEY
