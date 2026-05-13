@@ -1,22 +1,21 @@
 import { PrismaClient } from '@prisma/client'
-import { PrismaLibSql } from '@prisma/adapter-libsql'
-import path from 'path'
 
-const globalForPrisma = globalThis as unknown as { prisma: PrismaClient }
+const globalForPrisma = globalThis as unknown as { prisma: PrismaClient | undefined }
 
-function createPrisma() {
+function createPrisma(): PrismaClient {
   const dbUrl = process.env.DATABASE_URL
 
   // Neon / Postgres (production) — HTTP transport, no WebSocket needed
   if (dbUrl && (dbUrl.startsWith('postgresql://') || dbUrl.startsWith('postgres://'))) {
     const { PrismaNeonHttp } = require('@prisma/adapter-neon')
-    // Strip channel_binding — not supported by Neon HTTP driver
     const connectionString = dbUrl.replace(/[&?]channel_binding=[^&]*/g, '')
     const adapter = new PrismaNeonHttp(connectionString)
-    return new PrismaClient({ adapter })
+    return new PrismaClient({ adapter } as never)
   }
 
   // SQLite / libsql (local dev)
+  const { PrismaLibSql } = require('@prisma/adapter-libsql')
+  const path = require('path')
   let url: string
   if (dbUrl && !dbUrl.includes('undefined')) {
     url = dbUrl.startsWith('file:.')
@@ -26,9 +25,17 @@ function createPrisma() {
     url = `file:${path.resolve(process.cwd(), 'dev.db')}`
   }
   const adapter = new PrismaLibSql({ url })
-  return new PrismaClient({ adapter })
+  return new PrismaClient({ adapter } as never)
 }
 
-export const prisma = globalForPrisma.prisma ?? createPrisma()
-
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
+// Lazy singleton — only initialised when first accessed, not at module import time
+export const prisma: PrismaClient = new Proxy({} as PrismaClient, {
+  get(_target, prop) {
+    if (!globalForPrisma.prisma) {
+      globalForPrisma.prisma = createPrisma()
+    }
+    const client = globalForPrisma.prisma
+    const value = (client as never as Record<string | symbol, unknown>)[prop]
+    return typeof value === 'function' ? value.bind(client) : value
+  },
+})
