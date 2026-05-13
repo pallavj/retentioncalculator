@@ -115,6 +115,7 @@ export default function CalculatorPage() {
           results={results}
           leadId={leadId}
           email={capturedEmail}
+          onBack={() => setStep('inputs')}
         />
       )}
     </div>
@@ -348,18 +349,26 @@ function EmailStep({
 // STEP 3: RESULTS (full reveal)
 // ─────────────────────────────────────────────
 function ResultsStep({
-  data, inputs, results, leadId, email,
+  data, inputs, results, leadId, email, onBack,
 }: {
   data: EnrichData
   inputs: Prefill
   results: CalcResults
   leadId: string
   email: string
+  onBack: () => void
 }) {
   const brandName = data.brandName ?? 'Your Store'
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-10 space-y-6">
+      <button
+        onClick={onBack}
+        className="flex items-center gap-1.5 text-sm transition-opacity hover:opacity-70"
+        style={{ color: 'var(--shopify-subdued)' }}
+      >
+        ← Edit my numbers
+      </button>
 
       {/* Hero reveal */}
       <div className="rounded-2xl p-8 text-center text-white animate-fade-in"

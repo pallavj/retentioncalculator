@@ -73,23 +73,28 @@ export async function POST(req: NextRequest) {
     totalHigh: results.totalHigh,
   }
 
-  // Fire emails concurrently, don't block the response
-  Promise.all([
-    sendReportEmail(emailPayload).catch((e) => console.error('[leads] sendReportEmail failed:', e?.message ?? e)),
-    sendLeadAlert({
-      leadId: lead.id,
-      brandName: submission.brandName ?? submission.brandUrl,
-      brandUrl: submission.brandUrl,
-      email,
-      industry: submission.industry ?? 'DTC Brand',
-      monthlyTraffic: inputs.monthlyTraffic,
-      aov: inputs.aov,
-      existingBase: inputs.existingBase,
-      repeatRate: inputs.repeatRate,
-      totalLow: results.totalLow,
-      totalHigh: results.totalHigh,
-    }).catch((e) => console.error('[leads] sendLeadAlert failed:', e?.message ?? e)),
-  ])
+  // Send emails — await so errors appear in Vercel logs
+  try {
+    await Promise.all([
+      sendReportEmail(emailPayload),
+      sendLeadAlert({
+        leadId: lead.id,
+        brandName: submission.brandName ?? submission.brandUrl,
+        brandUrl: submission.brandUrl,
+        email,
+        industry: submission.industry ?? 'DTC Brand',
+        monthlyTraffic: inputs.monthlyTraffic,
+        aov: inputs.aov,
+        existingBase: inputs.existingBase,
+        repeatRate: inputs.repeatRate,
+        totalLow: results.totalLow,
+        totalHigh: results.totalHigh,
+      }),
+    ])
+    console.log('[leads] emails sent OK to:', email)
+  } catch (e) {
+    console.error('[leads] email error:', e)
+  }
 
   return NextResponse.json({ leadId: lead.id })
 }
