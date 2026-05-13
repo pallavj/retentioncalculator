@@ -69,8 +69,8 @@ export function calculate(inputs: CalcInputs): CalcResults {
 }
 
 export function formatCurrency(value: number): string {
-  if (value >= 10_00_000) {
-    return `₹${(value / 10_00_000).toFixed(1)}L`
+  if (value >= 1_00_000) {
+    return `₹${(value / 1_00_000).toFixed(1)}L`
   }
   if (value >= 1_000) {
     return `₹${value.toLocaleString('en-IN')}`
