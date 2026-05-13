@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { calculate, CalcResults, formatCurrency, formatRange } from '@/lib/calculations'
+import { calculate, CalcResults, CalcInputs, formatCurrency, formatRange } from '@/lib/calculations'
 
 interface Prefill {
   monthlyTraffic: number
@@ -25,9 +25,8 @@ interface EnrichData {
   aovSource: string
 }
 
-type Step = 'inputs' | 'email' | 'results'
+type Step = 'inputs' | 'whatsapp' | 'results'
 
-/** Extract a human-readable name from a URL when scraping finds nothing */
 function brandNameFromUrl(url: string): string {
   try {
     const host = new URL(url.startsWith('http') ? url : `https://${url}`).hostname
@@ -46,7 +45,7 @@ export default function CalculatorPage() {
   const [results, setResults] = useState<CalcResults | null>(null)
   const [step, setStep] = useState<Step>('inputs')
   const [leadId, setLeadId] = useState<string | null>(null)
-  const [capturedEmail, setCapturedEmail] = useState<string>('')
+  const [capturedWhatsApp, setCapturedWhatsApp] = useState<string>('')
 
   useEffect(() => {
     fetch(`/api/submission/${id}`)
@@ -90,20 +89,20 @@ export default function CalculatorPage() {
           inputs={inputs}
           results={results}
           onUpdate={updateField}
-          onNext={() => setStep('email')}
+          onNext={() => setStep('whatsapp')}
         />
       )}
-      {step === 'email' && (
-        <EmailStep
+      {step === 'whatsapp' && (
+        <WhatsAppStep
           submissionId={id}
           inputs={inputs}
           brandName={data.brandName ?? brandNameFromUrl(data.brandUrl)}
           totalLow={results.totalLow}
           totalHigh={results.totalHigh}
           onBack={() => setStep('inputs')}
-          onSuccess={(lId, email) => {
+          onSuccess={(lId, wa) => {
             setLeadId(lId)
-            setCapturedEmail(email)
+            setCapturedWhatsApp(wa)
             setStep('results')
           }}
         />
@@ -114,7 +113,6 @@ export default function CalculatorPage() {
           inputs={inputs}
           results={results}
           leadId={leadId}
-          email={capturedEmail}
           onBack={() => setStep('inputs')}
         />
       )}
@@ -138,7 +136,6 @@ function InputsStep({
 
   return (
     <div className="max-w-xl mx-auto px-4 py-12">
-      {/* Header */}
       <div className="mb-8">
         <p className="text-sm font-medium mb-2" style={{ color: 'var(--shopify-green)' }}>
           STEP 1 OF 2 · STORE METRICS
@@ -153,7 +150,6 @@ function InputsStep({
 
       <div className="rounded-2xl p-6 space-y-6" style={{ background: 'var(--shopify-white)', border: '1px solid var(--shopify-border)' }}>
 
-        {/* Auto-detected section */}
         <div>
           <p className="text-xs font-semibold uppercase tracking-wider mb-4" style={{ color: 'var(--shopify-subdued)' }}>
             Auto-detected from your store
@@ -233,9 +229,9 @@ function InputsStep({
 }
 
 // ─────────────────────────────────────────────
-// STEP 2: EMAIL GATE (before any reveal)
+// STEP 2: WHATSAPP GATE
 // ─────────────────────────────────────────────
-function EmailStep({
+function WhatsAppStep({
   submissionId, inputs, brandName, totalLow, totalHigh, onSuccess, onBack,
 }: {
   submissionId: string
@@ -243,10 +239,10 @@ function EmailStep({
   brandName: string
   totalLow: number
   totalHigh: number
-  onSuccess: (leadId: string, email: string) => void
+  onSuccess: (leadId: string, whatsapp: string) => void
   onBack: () => void
 }) {
-  const [email, setEmail] = useState('')
+  const [whatsapp, setWhatsApp] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -258,11 +254,11 @@ function EmailStep({
       const res = await fetch('/api/leads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ submissionId, email, ...inputs }),
+        body: JSON.stringify({ submissionId, whatsapp, ...inputs }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error ?? 'Something went wrong')
-      onSuccess(data.leadId, email)
+      onSuccess(data.leadId, whatsapp)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed. Please try again.')
       setLoading(false)
@@ -272,7 +268,6 @@ function EmailStep({
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-16" style={{ background: 'var(--shopify-surface)' }}>
       <div className="w-full max-w-md">
-        {/* Back link */}
         <button
           onClick={onBack}
           className="flex items-center gap-1.5 text-sm mb-8 transition-opacity hover:opacity-70"
@@ -281,7 +276,6 @@ function EmailStep({
           ← Edit my numbers
         </button>
 
-        {/* Teaser */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6"
             style={{ background: 'var(--shopify-green-light)', color: 'var(--shopify-green)' }}>
@@ -292,12 +286,11 @@ function EmailStep({
             {brandName} has a real opportunity hiding in plain sight
           </h1>
           <p className="text-base" style={{ color: 'var(--shopify-subdued)' }}>
-            Enter your email to see exactly how much — broken down by where it's coming from
-            and how to fix it.
+            Enter your WhatsApp number and we'll send your full report directly — broken down by where the money is hiding and exactly how to fix it.
           </p>
         </div>
 
-        {/* Blurred preview hint */}
+        {/* Blurred preview */}
         <div className="rounded-2xl p-5 mb-6 relative overflow-hidden" style={{ background: 'var(--shopify-white)', border: '1px solid var(--shopify-border)' }}>
           <div className="blur-sm select-none pointer-events-none">
             <p className="text-xs mb-1" style={{ color: 'var(--shopify-subdued)' }}>Monthly opportunity</p>
@@ -310,16 +303,19 @@ function EmailStep({
           </div>
         </div>
 
-        {/* Email form */}
+        {/* WhatsApp form */}
         <form onSubmit={submit} className="rounded-2xl p-6" style={{ background: 'var(--shopify-white)', border: '1px solid var(--shopify-border)' }}>
-          <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--shopify-text)' }}>
-            Where should we send your full report?
+          <label className="block text-sm font-semibold mb-1" style={{ color: 'var(--shopify-text)' }}>
+            Your WhatsApp number
           </label>
+          <p className="text-xs mb-3" style={{ color: 'var(--shopify-subdued)' }}>
+            We'll send your full report on WhatsApp. Include country code — e.g. +91 98765 43210
+          </p>
           <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="your@email.com"
+            type="tel"
+            value={whatsapp}
+            onChange={(e) => setWhatsApp(e.target.value)}
+            placeholder="+91 98765 43210"
             required
             autoFocus
             className="w-full px-4 py-3 rounded-xl border text-sm outline-none mb-3 transition-all"
@@ -330,14 +326,14 @@ function EmailStep({
           {error && <p className="text-sm text-red-500 mb-3">{error}</p>}
           <button
             type="submit"
-            disabled={loading || !email}
+            disabled={loading || !whatsapp.trim()}
             className="w-full py-4 rounded-xl font-semibold text-white text-base transition-all disabled:opacity-60"
             style={{ background: 'var(--shopify-green)' }}
           >
-            {loading ? 'Calculating...' : 'Show Me the Numbers →'}
+            {loading ? 'Calculating...' : 'Send My Report on WhatsApp →'}
           </button>
           <p className="text-xs text-center mt-3" style={{ color: 'var(--shopify-subdued)' }}>
-            We'll also send a copy of your report to this email. No spam, ever.
+            No spam, ever. Just your numbers.
           </p>
         </form>
       </div>
@@ -346,19 +342,54 @@ function EmailStep({
 }
 
 // ─────────────────────────────────────────────
-// STEP 3: RESULTS (full reveal)
+// STEP 3: RESULTS
 // ─────────────────────────────────────────────
 function ResultsStep({
-  data, inputs, results, leadId, email, onBack,
+  data, inputs, results, onBack,
 }: {
   data: EnrichData
   inputs: Prefill
   results: CalcResults
   leadId: string
-  email: string
   onBack: () => void
 }) {
   const brandName = data.brandName ?? 'Your Store'
+
+  // Sort opportunity cards highest → lowest by opp high value
+  const opportunities = [
+    {
+      id: 'opp1',
+      icon: '🔄',
+      title: 'Retain new customers better',
+      punchline: `${results.monthlyNewCustomers.toLocaleString('en-IN')} people bought from you this month for the first time. Most won't come back.`,
+      low: results.opp1Low,
+      high: results.opp1High,
+      calcLine: `${results.monthlyNewCustomers.toLocaleString('en-IN')} new customers × 5–10% better retention × ${formatCurrency(inputs.aov)} AOV`,
+      howBody: `We target your first-time buyers specifically — not your whole base. New customers who receive the right communication in their first 30 days are 5–10% more likely to place a second order. Most brands send a generic order confirmation and nothing else. A 3-touch post-purchase sequence changes that without touching your ad spend.`,
+    },
+    {
+      id: 'opp2',
+      icon: '💤',
+      title: 'Revive your customer base',
+      punchline: `${inputs.existingBase.toLocaleString('en-IN')} customers in your base have gone quiet. Here's what they're worth.`,
+      low: results.opp2Low,
+      high: results.opp2High,
+      calcLine: `${inputs.existingBase.toLocaleString('en-IN')} customers × ${((inputs.conversionRate * 0.25) * 100).toFixed(2)}–${((inputs.conversionRate * 0.5) * 100).toFixed(2)}% re-engagement × ${formatCurrency(inputs.aov)} AOV`,
+      howBody: `We benchmark re-engagement against your own conversion rate — so the target is always realistic for your store, not a generic stat. These customers already trust you and have bought from you before. They don't need to be re-acquired. The right win-back message at the right moment brings them back at roughly half your current conversion rate.`,
+    },
+    {
+      id: 'opp3',
+      icon: '🛒',
+      title: 'Convert the ones who almost bought',
+      punchline: `Every month, ${results.monthlyAbandoners.toLocaleString('en-IN')} visitors left without buying. Some of them were close.`,
+      low: results.opp3Low,
+      high: results.opp3High,
+      calcLine: `${results.monthlyAbandoners.toLocaleString('en-IN')} visitors × ${((inputs.conversionRate * 0.25) * 100).toFixed(2)}–${((inputs.conversionRate * 0.5) * 100).toFixed(2)}% recovery × ${formatCurrency(inputs.aov)} AOV`,
+      howBody: `We use your own store's conversion rate as the benchmark — the recovery target is half of what your site already converts at cold traffic. These aren't cold leads. They visited your store and showed real intent. A well-timed WhatsApp or email with the right message converts them at a fraction of what it costs to acquire someone new.`,
+    },
+  ]
+    .sort((a, b) => b.high - a.high)
+    .map((opp, i) => ({ ...opp, num: String(i + 1).padStart(2, '0') }))
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-10 space-y-6">
@@ -378,7 +409,7 @@ function ResultsStep({
         <p className="opacity-80">sitting idle every month — without touching your ad spend</p>
       </div>
 
-      {/* How we calculated this */}
+      {/* What we find */}
       <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--shopify-white)', border: '1px solid var(--shopify-border)' }}>
         <div className="px-6 pt-5 pb-3">
           <h2 className="text-base font-bold mb-1" style={{ color: 'var(--shopify-text)' }}>What we find from your store</h2>
@@ -389,86 +420,59 @@ function ResultsStep({
         <div className="divide-y" style={{ borderColor: 'var(--shopify-border)' }}>
           {[
             {
-              label: 'Monthly New Customers',
-              value: results.monthlyNewCustomers.toLocaleString('en-IN'),
-              calc: `${inputs.monthlyTraffic.toLocaleString('en-IN')} sessions × ${(inputs.conversionRate * 100).toFixed(1)}% conversion`,
-            },
-            {
-              label: 'Monthly New Revenue',
-              value: formatCurrency(results.monthlyNewRevenue),
-              calc: `${results.monthlyNewCustomers.toLocaleString('en-IN')} new customers × ${formatCurrency(inputs.aov)} AOV`,
-            },
-            {
-              label: 'Monthly Repeat Customers',
-              value: results.monthlyRepeatCustomers.toLocaleString('en-IN'),
-              calc: `${inputs.existingBase.toLocaleString('en-IN')} base × ${(inputs.repeatRate * 100).toFixed(0)}% repeat rate`,
+              label: 'Monthly Total Revenue',
+              value: formatCurrency(results.monthlyTotalRevenue),
+              calc: `${inputs.monthlyTraffic.toLocaleString('en-IN')} sessions × ${(inputs.conversionRate * 100).toFixed(1)}% conversion × ${formatCurrency(inputs.aov)} AOV`,
             },
             {
               label: 'Monthly Repeat Revenue',
               value: formatCurrency(results.monthlyRepeatRevenue),
-              calc: `${results.monthlyRepeatCustomers.toLocaleString('en-IN')} repeat customers × ${formatCurrency(inputs.aov)} AOV`,
+              calc: `${formatCurrency(results.monthlyTotalRevenue)} × ${(inputs.repeatRate * 100).toFixed(0)}% repeat rate`,
             },
             {
-              label: 'Monthly Dormant Customers',
-              value: results.monthlyDormantCustomers.toLocaleString('en-IN'),
-              calc: `${inputs.existingBase.toLocaleString('en-IN')} base − ${results.monthlyRepeatCustomers.toLocaleString('en-IN')} active = ${results.monthlyDormantCustomers.toLocaleString('en-IN')} who've gone silent`,
-              highlight: true,
+              label: 'Monthly New Revenue',
+              value: formatCurrency(results.monthlyNewRevenue),
+              calc: `${formatCurrency(results.monthlyTotalRevenue)} − ${formatCurrency(results.monthlyRepeatRevenue)} repeat revenue`,
             },
           ].map((row) => (
             <div key={row.label} className="px-6 py-4">
               <div className="flex justify-between items-center mb-1">
-                <span className="text-sm font-medium" style={{ color: row.highlight ? '#D72C0D' : 'var(--shopify-text)' }}>
-                  {row.label}
-                </span>
-                <span className={`text-base font-bold ${row.highlight ? 'text-red-500' : ''}`}
-                  style={row.highlight ? {} : { color: 'var(--shopify-text)' }}>
-                  {row.value}
-                </span>
+                <span className="text-sm font-medium" style={{ color: 'var(--shopify-text)' }}>{row.label}</span>
+                <span className="text-xl font-black" style={{ color: 'var(--shopify-text)' }}>{row.value}</span>
               </div>
               <p className="text-xs" style={{ color: 'var(--shopify-subdued)' }}>{row.calc}</p>
             </div>
           ))}
         </div>
+
+        {/* Pie chart */}
+        <RevenuePieChart
+          newRevenue={results.monthlyNewRevenue}
+          repeatRevenue={results.monthlyRepeatRevenue}
+        />
       </div>
 
-      {/* Money Left on the Table — 3 cards */}
+      {/* Opportunity cards — sorted by value */}
       <div>
         <h2 className="text-xl font-bold mb-1" style={{ color: 'var(--shopify-text)' }}>The 3 places the money is hiding</h2>
-        <p className="text-sm mb-5" style={{ color: 'var(--shopify-subdued)' }}>Each one is fixable. Here's what it's worth.</p>
+        <p className="text-sm mb-5" style={{ color: 'var(--shopify-subdued)' }}>Sorted by opportunity size. Each one is fixable.</p>
       </div>
 
-      <OpportunityCard
-        num="01"
-        icon="🔄"
-        title="Retain new customers better"
-        punchline={`${results.monthlyNewCustomers} people bought from you this month. Most won't come back.`}
-        range={formatRange(results.opp1Low, results.opp1High)}
-        calcLine={`${results.monthlyNewCustomers} new customers × 5–10% better retention × ${formatCurrency(inputs.aov)} AOV`}
-        howBody={`Based on our experience with DTC brands in the ${data.industry} category, new customers who receive the right communication in the first 30 days are 5–10% more likely to buy again. Most brands send a generic order confirmation — and nothing else. A 3-touch post-purchase sequence changes that.`}
-      />
+      {opportunities.map((opp, index) => (
+        <OpportunityCard
+          key={opp.id}
+          num={opp.num}
+          icon={opp.icon}
+          title={opp.title}
+          punchline={opp.punchline}
+          range={formatRange(opp.low, opp.high)}
+          calcLine={opp.calcLine}
+          howBody={opp.howBody}
+          highlight={index === 0}
+        />
+      ))}
 
-      <OpportunityCard
-        num="02"
-        icon="💤"
-        title="Revive your dormant customers"
-        punchline={`${results.monthlyDormantCustomers.toLocaleString('en-IN')} customers bought from you once. Then disappeared.`}
-        range={formatRange(results.opp2Low, results.opp2High)}
-        calcLine={`${results.monthlyDormantCustomers.toLocaleString('en-IN')} dormant × 0.5–1% win-back rate × ${formatCurrency(inputs.aov)} AOV`}
-        howBody={`Based on our experience, 0.5–1% of dormant customers respond to a well-timed win-back sequence. The right message, the right offer, at the moment they're most likely to re-engage. They already trust you — they don't need to be re-acquired.`}
-        highlight
-      />
-
-      <OpportunityCard
-        num="03"
-        icon="🛒"
-        title="Convert the ones who almost bought"
-        punchline={`Every month, ${((inputs.monthlyTraffic * (1 - inputs.conversionRate))).toLocaleString('en-IN', { maximumFractionDigits: 0 })} visitors left without buying. Some of them were close.`}
-        range={formatRange(results.opp3Low, results.opp3High)}
-        calcLine={`${results.monthlyNewCustomers} nearly-converted × 5–10% recovery × ${formatCurrency(inputs.aov)} AOV`}
-        howBody={`Based on our experience, giving abandoners the right reasons to complete their first purchase — timely reminders, social proof, an offer that feels personal — recovers 5–10% of them. They came to your store. They just needed a nudge.`}
-      />
-
-      {/* 4th section — total + we'll reach out */}
+      {/* Total + CTA */}
       <div className="rounded-2xl overflow-hidden" style={{ border: '2px solid var(--shopify-green)' }}>
         <div className="p-8 text-center" style={{ background: 'var(--shopify-green)' }}>
           <p className="text-sm opacity-75 mb-1 uppercase tracking-wider">Combined monthly opportunity</p>
@@ -479,14 +483,14 @@ function ResultsStep({
           <div className="text-center">
             <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4"
               style={{ background: 'var(--shopify-green-light)' }}>
-              <span className="text-xl">📬</span>
+              <span className="text-xl">💬</span>
             </div>
             <h3 className="text-xl font-bold mb-2" style={{ color: 'var(--shopify-text)' }}>
               We'll walk you through how to recover this
             </h3>
             <p className="text-sm mb-5 max-w-sm mx-auto" style={{ color: 'var(--shopify-subdued)' }}>
-              We'll reach out to <strong>{email}</strong> to discuss what's fixable first, what it takes,
-              and what a realistic 90-day recovery looks like for {brandName}.
+              Your report is on its way to your WhatsApp. We'll reach out to discuss what's fixable first,
+              what it takes, and what a realistic 90-day recovery looks like for {brandName}.
             </p>
             <div className="flex flex-col gap-2 max-w-xs mx-auto">
               {[
@@ -500,10 +504,47 @@ function ResultsStep({
           </div>
         </div>
       </div>
+    </div>
+  )
+}
 
-      <p className="text-xs text-center pb-4" style={{ color: 'var(--shopify-subdued)' }}>
-        A copy of this report has been sent to {email}
+// ─────────────────────────────────────────────
+// REVENUE PIE CHART
+// ─────────────────────────────────────────────
+function RevenuePieChart({ newRevenue, repeatRevenue }: { newRevenue: number; repeatRevenue: number }) {
+  const total = newRevenue + repeatRevenue
+  const repeatPct = Math.round((repeatRevenue / total) * 100)
+  const newPct = 100 - repeatPct
+
+  return (
+    <div className="px-6 py-5" style={{ borderTop: '1px solid var(--shopify-border)' }}>
+      <p className="text-xs font-semibold uppercase tracking-wider mb-4" style={{ color: 'var(--shopify-subdued)' }}>
+        Revenue split
       </p>
+      <div className="flex items-center gap-8">
+        <div
+          className="flex-shrink-0 w-28 h-28 rounded-full"
+          style={{
+            background: `conic-gradient(var(--shopify-green) 0% ${repeatPct}%, #d1f0e8 ${repeatPct}% 100%)`,
+          }}
+        />
+        <div className="space-y-4 flex-1">
+          <div>
+            <div className="flex items-center gap-2 mb-0.5">
+              <div className="w-3 h-3 rounded-sm flex-shrink-0" style={{ background: 'var(--shopify-green)' }} />
+              <span className="text-xs" style={{ color: 'var(--shopify-subdued)' }}>Repeat Revenue ({repeatPct}%)</span>
+            </div>
+            <p className="text-2xl font-black ml-5" style={{ color: 'var(--shopify-text)' }}>{formatCurrency(repeatRevenue)}</p>
+          </div>
+          <div>
+            <div className="flex items-center gap-2 mb-0.5">
+              <div className="w-3 h-3 rounded-sm flex-shrink-0" style={{ background: '#d1f0e8' }} />
+              <span className="text-xs" style={{ color: 'var(--shopify-subdued)' }}>New Revenue ({newPct}%)</span>
+            </div>
+            <p className="text-2xl font-black ml-5" style={{ color: 'var(--shopify-text)' }}>{formatCurrency(newRevenue)}</p>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
@@ -527,7 +568,6 @@ function Field({
 }) {
   const [localVal, setLocalVal] = useState(String(value))
 
-  // Sync when parent resets (e.g. initial load)
   useEffect(() => { setLocalVal(String(value)) }, [value])
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -604,7 +644,7 @@ function OpportunityCard({
         </div>
 
         <div className="rounded-xl px-5 py-4 mb-4" style={{ background: 'var(--shopify-surface)' }}>
-          <p className="text-3xl font-black mb-1" style={{ color: 'var(--shopify-green)' }}>{range}</p>
+          <p className="text-4xl font-black mb-1" style={{ color: 'var(--shopify-green)' }}>{range}</p>
           <p className="text-xs" style={{ color: 'var(--shopify-subdued)' }}>per month</p>
           <p className="text-xs mt-2 font-mono" style={{ color: 'var(--shopify-subdued)' }}>{calcLine}</p>
         </div>
@@ -614,8 +654,7 @@ function OpportunityCard({
           className="flex items-center gap-1.5 text-sm font-semibold transition-colors"
           style={{ color: 'var(--shopify-green)' }}
         >
-          {open ? '↑ Hide' : '↓ See How'} &nbsp;
-          <span className="text-xs opacity-60">based on our experience</span>
+          {open ? '↑ Hide' : '↓ How we calculate this'}
         </button>
       </div>
 
@@ -623,7 +662,7 @@ function OpportunityCard({
         <div className="px-6 pb-6">
           <div className="rounded-xl p-4" style={{ background: 'var(--shopify-green-light)' }}>
             <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'var(--shopify-green)' }}>
-              Based on our experience
+              The logic
             </p>
             <p className="text-sm leading-relaxed" style={{ color: 'var(--shopify-text)' }}>{howBody}</p>
           </div>

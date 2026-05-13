@@ -1,5 +1,4 @@
 import { render } from '@react-email/render'
-import ReportEmail from '@/emails/ReportEmail'
 import LeadAlertEmail from '@/emails/LeadAlertEmail'
 
 const ALERT_EMAIL = process.env.ALERT_EMAIL ?? 'pallavjhawar@gmail.com'
@@ -21,37 +20,11 @@ async function sendEmail(to: string, subject: string, html: string) {
   await resend.emails.send({ from: FROM, to, subject, html })
 }
 
-interface ReportPayload {
-  to: string
-  leadId: string
-  brandName: string
-  brandUrl: string
-  industry: string
-  aov: number
-  existingBase: number
-  monthlyNewCustomers: number
-  monthlyDormantCustomers: number
-  opp1Low: number; opp1High: number
-  opp2Low: number; opp2High: number
-  opp3Low: number; opp3High: number
-  totalLow: number; totalHigh: number
-}
-
-export async function sendReportEmail(payload: ReportPayload) {
-  const reportUrl = `${BASE_URL}/report/${payload.leadId}`
-  const html = await render(ReportEmail({ ...payload, reportUrl }))
-  await sendEmail(
-    payload.to,
-    `Your retention report for ${payload.brandName} is ready`,
-    html,
-  )
-}
-
 export async function sendLeadAlert(payload: {
   leadId: string
   brandName: string
   brandUrl: string
-  email: string
+  whatsapp: string
   industry: string
   monthlyTraffic: number
   aov: number

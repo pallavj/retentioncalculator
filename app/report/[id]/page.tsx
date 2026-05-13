@@ -17,6 +17,57 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
 
   const brandName = lead.brandName ?? lead.brandUrl
   const industry = lead.industry ?? 'DTC Brand'
+  const whatsapp = lead.email  // stored in email field
+
+  // Sort opportunities by high value descending
+  const opportunities = [
+    {
+      num: '01',
+      icon: '🔄',
+      title: 'Retain new customers better',
+      stat: `${results.monthlyNewCustomers.toLocaleString('en-IN')} new customers this month`,
+      range: formatRange(results.opp1Low, results.opp1High),
+      body: `We target first-time buyers specifically — not your whole base. New customers who receive the right communication in their first 30 days are 5–10% more likely to place a second order. Most brands send a generic order confirmation and nothing else. A well-timed 3-touch sequence changes that without touching ad spend.`,
+      numbers: [
+        { label: 'New customers/month', value: results.monthlyNewCustomers.toLocaleString('en-IN') },
+        { label: 'Upside at 5%', value: formatCurrency(results.opp1Low) + '/mo' },
+        { label: 'Upside at 10%', value: formatCurrency(results.opp1High) + '/mo' },
+      ],
+      high: results.opp1High,
+    },
+    {
+      num: '02',
+      icon: '💤',
+      title: 'Revive your customer base',
+      stat: `${lead.existingBase.toLocaleString('en-IN')} total customers in your base`,
+      range: formatRange(results.opp2Low, results.opp2High),
+      body: `We benchmark re-engagement against your own conversion rate — so the target is always realistic for your store. These customers already trust you. They don't need to be re-acquired. The right win-back message at the right moment brings them back at roughly half your current conversion rate.`,
+      numbers: [
+        { label: 'Customer base', value: lead.existingBase.toLocaleString('en-IN') },
+        { label: `Upside at ${((lead.conversionRate * 0.25) * 100).toFixed(2)}%`, value: formatCurrency(results.opp2Low) + '/mo' },
+        { label: `Upside at ${((lead.conversionRate * 0.5) * 100).toFixed(2)}%`, value: formatCurrency(results.opp2High) + '/mo' },
+      ],
+      high: results.opp2High,
+    },
+    {
+      num: '03',
+      icon: '🛒',
+      title: 'Convert the ones who almost bought',
+      stat: `${results.monthlyAbandoners.toLocaleString('en-IN')} visitors left without buying this month`,
+      range: formatRange(results.opp3Low, results.opp3High),
+      body: `We use your store's own conversion rate as the benchmark — the recovery target is half of what your site already converts at cold traffic. These aren't cold leads. They visited your store and showed real intent. A well-timed WhatsApp or email with the right message converts them at a fraction of the cost of new acquisition.`,
+      numbers: [
+        { label: 'Monthly abandoners', value: results.monthlyAbandoners.toLocaleString('en-IN') },
+        { label: `Upside at ${((lead.conversionRate * 0.25) * 100).toFixed(2)}%`, value: formatCurrency(results.opp3Low) + '/mo' },
+        { label: `Upside at ${((lead.conversionRate * 0.5) * 100).toFixed(2)}%`, value: formatCurrency(results.opp3High) + '/mo' },
+      ],
+      high: results.opp3High,
+    },
+  ].sort((a, b) => b.high - a.high)
+    .map((opp, i) => ({ ...opp, num: String(i + 1).padStart(2, '0') }))
+
+  const repeatPct = Math.round((results.monthlyRepeatRevenue / results.monthlyTotalRevenue) * 100)
+  const newPct = 100 - repeatPct
 
   return (
     <div className="min-h-screen" style={{ background: 'var(--shopify-surface)' }}>
@@ -37,7 +88,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
 
       <div className="max-w-3xl mx-auto px-4 py-10 space-y-8">
 
-        {/* Brand snapshot */}
+        {/* Store snapshot */}
         <section className="rounded-xl p-6" style={{ background: 'var(--shopify-white)', border: '1px solid var(--shopify-border)' }}>
           <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--shopify-text)' }}>Your Store at a Glance</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
@@ -45,9 +96,9 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
               { label: 'Monthly Traffic', value: lead.monthlyTraffic.toLocaleString('en-IN') + ' sessions' },
               { label: 'Conversion Rate', value: (lead.conversionRate * 100).toFixed(2) + '%' },
               { label: 'Average Order Value', value: formatCurrency(lead.aov) },
-              { label: 'Monthly New Customers', value: results.monthlyNewCustomers.toLocaleString('en-IN') },
+              { label: 'Monthly Total Revenue', value: formatCurrency(results.monthlyTotalRevenue) },
               { label: 'Monthly Repeat Revenue', value: formatCurrency(results.monthlyRepeatRevenue) },
-              { label: 'Dormant Customers', value: results.monthlyDormantCustomers.toLocaleString('en-IN') },
+              { label: 'Monthly New Revenue', value: formatCurrency(results.monthlyNewRevenue) },
             ].map((item) => (
               <div key={item.label} className="rounded-lg p-4"
                 style={{ background: 'var(--shopify-surface)', border: '1px solid var(--shopify-border)' }}>
@@ -56,19 +107,43 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
               </div>
             ))}
           </div>
+
+          {/* Revenue pie chart */}
+          <div className="mt-6 pt-6" style={{ borderTop: '1px solid var(--shopify-border)' }}>
+            <p className="text-sm font-semibold mb-4" style={{ color: 'var(--shopify-text)' }}>Revenue split — new vs repeat</p>
+            <div className="flex items-center gap-8">
+              <div
+                className="flex-shrink-0 w-24 h-24 rounded-full"
+                style={{
+                  background: `conic-gradient(var(--shopify-green) 0% ${repeatPct}%, #d1f0e8 ${repeatPct}% 100%)`,
+                }}
+              />
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-sm" style={{ background: 'var(--shopify-green)' }} />
+                  <span className="text-sm" style={{ color: 'var(--shopify-subdued)' }}>
+                    Repeat — <strong style={{ color: 'var(--shopify-text)' }}>{formatCurrency(results.monthlyRepeatRevenue)}</strong> ({repeatPct}%)
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-sm" style={{ background: '#d1f0e8' }} />
+                  <span className="text-sm" style={{ color: 'var(--shopify-subdued)' }}>
+                    New — <strong style={{ color: 'var(--shopify-text)' }}>{formatCurrency(results.monthlyNewRevenue)}</strong> ({newPct}%)
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
         </section>
 
         {/* The gap */}
         <section className="rounded-xl p-6" style={{ background: 'var(--shopify-white)', border: '1px solid var(--shopify-border)' }}>
           <h2 className="text-lg font-semibold mb-2" style={{ color: 'var(--shopify-text)' }}>The Gap</h2>
           <p className="text-sm mb-6" style={{ color: 'var(--shopify-subdued)' }}>
-            {results.monthlyDormantCustomers.toLocaleString('en-IN')} of your {lead.existingBase.toLocaleString('en-IN')} customers are dormant.
-            Only <strong>{(lead.repeatRate * 100).toFixed(0)}%</strong> repeat each month — the {industry} benchmark is typically{' '}
-            <strong>25–35%</strong>.
+            Only <strong>{(lead.repeatRate * 100).toFixed(0)}%</strong> of your monthly orders come from repeat customers.
+            The {industry} benchmark is typically <strong>25–35%</strong>.
           </p>
-
-          {/* Visual gap bar */}
-          <div className="mb-6">
+          <div className="mb-2">
             <div className="flex justify-between text-xs mb-1" style={{ color: 'var(--shopify-subdued)' }}>
               <span>Your repeat rate: {(lead.repeatRate * 100).toFixed(0)}%</span>
               <span>Benchmark: 25–35%</span>
@@ -79,50 +154,12 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
           </div>
         </section>
 
-        {/* The 3 opportunities */}
-        <h2 className="text-lg font-semibold" style={{ color: 'var(--shopify-text)' }}>The 3 Opportunities</h2>
+        {/* The 3 opportunities — sorted by value */}
+        <h2 className="text-lg font-semibold" style={{ color: 'var(--shopify-text)' }}>
+          The 3 Opportunities — sorted by size
+        </h2>
 
-        {[
-          {
-            num: '01',
-            icon: '🔄',
-            title: 'Retain new customers better',
-            stat: `${results.monthlyNewCustomers} new customers/month`,
-            range: formatRange(results.opp1Low, results.opp1High),
-            body: `Based on our experience with DTC brands in the ${industry} category, new customers who receive the right communication sequence in the first 30 days are 5–10% more likely to place a second order. Most brands send a generic order confirmation and nothing else — that's the gap. A well-timed 3-touch sequence (post-purchase education → usage nudge → reorder prompt) consistently moves the needle.`,
-            numbers: [
-              { label: 'New customers/month', value: results.monthlyNewCustomers.toLocaleString('en-IN') },
-              { label: 'Upside at 5%', value: formatCurrency(results.opp1Low) + '/mo' },
-              { label: 'Upside at 10%', value: formatCurrency(results.opp1High) + '/mo' },
-            ],
-          },
-          {
-            num: '02',
-            icon: '💤',
-            title: 'Revive dormant customers',
-            stat: `${results.monthlyDormantCustomers.toLocaleString('en-IN')} dormant customers`,
-            range: formatRange(results.opp2Low, results.opp2High),
-            body: `Based on our experience, 0.5–1% of dormant customers respond to a well-timed win-back sequence — the right offer, sent when they're most likely to re-engage. These customers already trust you. They don't need to be convinced from scratch. A simple win-back flow with a reason to return (new collection, loyalty offer, "we miss you" moment) reactivates them consistently.`,
-            numbers: [
-              { label: 'Dormant customers', value: results.monthlyDormantCustomers.toLocaleString('en-IN') },
-              { label: 'Upside at 0.5%', value: formatCurrency(results.opp2Low) + '/mo' },
-              { label: 'Upside at 1%', value: formatCurrency(results.opp2High) + '/mo' },
-            ],
-          },
-          {
-            num: '03',
-            icon: '🛒',
-            title: 'Convert more abandoners',
-            stat: `${results.monthlyNewCustomers} new customer opportunities/month`,
-            range: formatRange(results.opp3Low, results.opp3High),
-            body: `Based on our experience, giving abandoners better reasons to complete their first purchase — through timely reminders and the right social proof — recovers 5–10% of lost conversions. These aren't cold leads. They visited your store, browsed your products, and showed real intent. The right abandoned cart sequence with urgency and trust signals closes a meaningful percentage of them.`,
-            numbers: [
-              { label: 'Potential new customers', value: results.monthlyNewCustomers.toLocaleString('en-IN') },
-              { label: 'Upside at 5%', value: formatCurrency(results.opp3Low) + '/mo' },
-              { label: 'Upside at 10%', value: formatCurrency(results.opp3High) + '/mo' },
-            ],
-          },
-        ].map((opp) => (
+        {opportunities.map((opp) => (
           <div key={opp.num} className="rounded-xl overflow-hidden"
             style={{ background: 'var(--shopify-white)', border: '1px solid var(--shopify-border)' }}>
             <div className="p-6">
@@ -132,9 +169,9 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
                 <h3 className="font-semibold" style={{ color: 'var(--shopify-text)' }}>{opp.title}</h3>
               </div>
               <p className="text-sm mb-3" style={{ color: 'var(--shopify-subdued)' }}>{opp.stat}</p>
-              <p className="text-2xl font-bold mb-4" style={{ color: 'var(--shopify-green)' }}>{opp.range} / month</p>
+              <p className="text-3xl font-black mb-4" style={{ color: 'var(--shopify-green)' }}>{opp.range} / month</p>
               <div className="rounded-lg p-4 mb-4" style={{ background: 'var(--shopify-green-light)' }}>
-                <p className="text-xs font-semibold mb-2" style={{ color: 'var(--shopify-green)' }}>Based on our experience</p>
+                <p className="text-xs font-semibold mb-2" style={{ color: 'var(--shopify-green)' }}>The logic</p>
                 <p className="text-sm leading-relaxed" style={{ color: 'var(--shopify-text)' }}>{opp.body}</p>
               </div>
               <div className="grid grid-cols-3 gap-3">
@@ -169,14 +206,12 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
               <p className="text-xs opacity-60 mt-3">No pitch. Just honest advice on what to fix first.</p>
             </>
           ) : (
-            <p className="opacity-80 text-sm">
-              Reply to your report email and we'll set up a call.
-            </p>
+            <p className="opacity-80 text-sm">Reply to this report on WhatsApp and we'll set up a call.</p>
           )}
         </div>
 
         <p className="text-xs text-center pb-8" style={{ color: 'var(--shopify-subdued)' }}>
-          Report generated for {lead.email} · {new Date(lead.createdAt).toLocaleDateString('en-IN')}
+          Report generated for {whatsapp} · {new Date(lead.createdAt).toLocaleDateString('en-IN')}
         </p>
       </div>
     </div>

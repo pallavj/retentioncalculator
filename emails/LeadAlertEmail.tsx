@@ -1,12 +1,12 @@
 import {
-  Body, Container, Head, Heading, Html, Preview, Text, Hr, Section, Row, Column,
+  Body, Container, Head, Heading, Html, Preview, Text, Hr, Section,
 } from '@react-email/components'
 import { formatCurrency, formatRange } from '@/lib/calculations'
 
 interface Props {
   brandName: string
   brandUrl: string
-  email: string
+  whatsapp: string
   industry: string
   monthlyTraffic: number
   aov: number
@@ -20,7 +20,7 @@ interface Props {
 export default function LeadAlertEmail({
   brandName = 'Unknown Brand',
   brandUrl = '',
-  email = '',
+  whatsapp = '',
   industry = 'DTC',
   monthlyTraffic = 0,
   aov = 0,
@@ -47,7 +47,7 @@ export default function LeadAlertEmail({
 
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             {[
-              ['Email', email],
+              ['WhatsApp', whatsapp],
               ['Brand URL', brandUrl],
               ['Industry', industry],
               ['Monthly Traffic', monthlyTraffic.toLocaleString('en-IN')],
