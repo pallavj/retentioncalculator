@@ -365,7 +365,7 @@ function ResultsStep({
       low: results.opp1Low,
       high: results.opp1High,
       calcLine: `${results.monthlyNewCustomers.toLocaleString('en-IN')} new customers × 5–10% better retention × ${formatCurrency(inputs.aov)} AOV`,
-      howBody: `We target your first-time buyers specifically — not your whole base. New customers who receive the right communication in their first 30 days are 5–10% more likely to place a second order. Most brands send a generic order confirmation and nothing else. A 3-touch post-purchase sequence changes that without touching your ad spend.`,
+      howBody: `Most brands already send an order confirmation — and some send a follow-up or two. That's a good start. What we add on top is a structured, data-driven sequence built specifically around your product and purchase behaviour: the right message, to the right customer, at the right time. Brands doing the basics typically see 5% more repeat buyers. With the right sequencing layered on top, that number moves to 10%. This is purely additive to whatever you're already doing.`,
     },
     {
       id: 'opp2',
@@ -375,7 +375,7 @@ function ResultsStep({
       low: results.opp2Low,
       high: results.opp2High,
       calcLine: `${inputs.existingBase.toLocaleString('en-IN')} customers × ${((inputs.conversionRate * 0.25) * 100).toFixed(2)}–${((inputs.conversionRate * 0.5) * 100).toFixed(2)}% re-engagement × ${formatCurrency(inputs.aov)} AOV`,
-      howBody: `We benchmark re-engagement against your own conversion rate — so the target is always realistic for your store, not a generic stat. These customers already trust you and have bought from you before. They don't need to be re-acquired. The right win-back message at the right moment brings them back at roughly half your current conversion rate.`,
+      howBody: `You're likely already running some win-back activity — a discount email here, a reminder there. That's not wasted effort. What we layer on top is timing and targeting precision: knowing which customers in your base are most likely to respond right now, and hitting them with the right message at that moment. Most brands recover 0.5% of their base with broad win-back blasts. With better targeting built on purchase history and behaviour, that number reliably doubles. Same audience, better results — on top of what you're already doing.`,
     },
     {
       id: 'opp3',
@@ -385,7 +385,7 @@ function ResultsStep({
       low: results.opp3Low,
       high: results.opp3High,
       calcLine: `${results.monthlyAbandoners.toLocaleString('en-IN')} visitors × ${((inputs.conversionRate * 0.25) * 100).toFixed(2)}–${((inputs.conversionRate * 0.5) * 100).toFixed(2)}% recovery × ${formatCurrency(inputs.aov)} AOV`,
-      howBody: `We use your own store's conversion rate as the benchmark — the recovery target is half of what your site already converts at cold traffic. These aren't cold leads. They visited your store and showed real intent. A well-timed WhatsApp or email with the right message converts them at a fraction of what it costs to acquire someone new.`,
+      howBody: `If you're running abandoned cart emails or retargeting ads, you're already recovering some of these. Good. What we add is a faster, cheaper, higher-converting layer on top — typically WhatsApp or SMS, which gets opened within minutes versus hours for email. We also go beyond just cart abandoners: people who browsed but never added to cart, or visited a product page multiple times. The combined effect on top of your existing recovery activity is what moves the needle from your current conversion rate to half of it again — on traffic you've already paid for.`,
     },
   ]
     .sort((a, b) => b.high - a.high)

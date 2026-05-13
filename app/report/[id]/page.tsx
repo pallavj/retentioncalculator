@@ -27,7 +27,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
       title: 'Retain new customers better',
       stat: `${results.monthlyNewCustomers.toLocaleString('en-IN')} new customers this month`,
       range: formatRange(results.opp1Low, results.opp1High),
-      body: `We target first-time buyers specifically — not your whole base. New customers who receive the right communication in their first 30 days are 5–10% more likely to place a second order. Most brands send a generic order confirmation and nothing else. A well-timed 3-touch sequence changes that without touching ad spend.`,
+      body: `Most brands already send an order confirmation — and some send a follow-up or two. That's a good start. What we add on top is a structured sequence built around your product and purchase behaviour: the right message, to the right customer, at the right time. Brands doing the basics typically see 5% more repeat buyers. With the right sequencing layered on top, that number moves to 10%. Purely additive to whatever you're already doing.`,
       numbers: [
         { label: 'New customers/month', value: results.monthlyNewCustomers.toLocaleString('en-IN') },
         { label: 'Upside at 5%', value: formatCurrency(results.opp1Low) + '/mo' },
@@ -41,7 +41,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
       title: 'Revive your customer base',
       stat: `${lead.existingBase.toLocaleString('en-IN')} total customers in your base`,
       range: formatRange(results.opp2Low, results.opp2High),
-      body: `We benchmark re-engagement against your own conversion rate — so the target is always realistic for your store. These customers already trust you. They don't need to be re-acquired. The right win-back message at the right moment brings them back at roughly half your current conversion rate.`,
+      body: `You're likely already running some win-back activity — a discount email here, a reminder there. That's not wasted effort. What we layer on top is timing and targeting precision: knowing which customers are most likely to respond right now, and hitting them at that moment. Most brands recover 0.5% of their base with broad win-back blasts. With better targeting built on purchase history and behaviour, that number reliably doubles. Same audience, better results — on top of what you're already doing.`,
       numbers: [
         { label: 'Customer base', value: lead.existingBase.toLocaleString('en-IN') },
         { label: `Upside at ${((lead.conversionRate * 0.25) * 100).toFixed(2)}%`, value: formatCurrency(results.opp2Low) + '/mo' },
@@ -55,7 +55,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
       title: 'Convert the ones who almost bought',
       stat: `${results.monthlyAbandoners.toLocaleString('en-IN')} visitors left without buying this month`,
       range: formatRange(results.opp3Low, results.opp3High),
-      body: `We use your store's own conversion rate as the benchmark — the recovery target is half of what your site already converts at cold traffic. These aren't cold leads. They visited your store and showed real intent. A well-timed WhatsApp or email with the right message converts them at a fraction of the cost of new acquisition.`,
+      body: `If you're running abandoned cart emails or retargeting ads, you're already recovering some of these. Good. What we add is a faster, cheaper, higher-converting layer on top — typically WhatsApp or SMS, which gets opened within minutes versus hours for email. We also go beyond cart abandoners: people who browsed but never added, or visited a product page multiple times. The combined effect on top of your existing recovery is what moves the needle — on traffic you've already paid for.`,
       numbers: [
         { label: 'Monthly abandoners', value: results.monthlyAbandoners.toLocaleString('en-IN') },
         { label: `Upside at ${((lead.conversionRate * 0.25) * 100).toFixed(2)}%`, value: formatCurrency(results.opp3Low) + '/mo' },
