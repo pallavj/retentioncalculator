@@ -67,7 +67,7 @@ export default function LeadAlertEmail({
           </Text>
 
           <Hr style={{ borderColor: '#E4E5E7' }} />
-          <Text style={{ color: '#6D7175', fontSize: 12 }}>Follow-up email sends automatically in 2 days.</Text>
+          <Text style={{ color: '#6D7175', fontSize: 12 }}>Sent from DTC Retention Calculator · retentioncalculator.vercel.app</Text>
         </Container>
       </Body>
     </Html>
