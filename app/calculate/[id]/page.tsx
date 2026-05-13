@@ -402,12 +402,21 @@ function ResultsStep({
       </button>
 
       {/* Hero reveal */}
-      <div className="rounded-2xl p-8 text-center text-white animate-fade-in"
-        style={{ background: 'var(--shopify-green)' }}>
-        <p className="text-sm opacity-75 mb-2 uppercase tracking-wider">Monthly opportunity for {brandName}</p>
-        <p className="text-5xl font-black mb-2">{formatRange(results.totalLow, results.totalHigh)}</p>
-        <p className="opacity-80">sitting idle every month — without touching your ad spend</p>
-      </div>
+      {(() => {
+        const pctLow = Math.round((results.totalLow / results.monthlyTotalRevenue) * 100)
+        const pctHigh = Math.round((results.totalHigh / results.monthlyTotalRevenue) * 100)
+        return (
+          <div className="rounded-2xl p-8 text-center text-white animate-fade-in"
+            style={{ background: 'var(--shopify-green)' }}>
+            <p className="text-sm opacity-75 mb-2 uppercase tracking-wider">Monthly opportunity for {brandName}</p>
+            <p className="text-5xl font-black mb-3">{formatRange(results.totalLow, results.totalHigh)}</p>
+            <div className="inline-block rounded-xl px-5 py-2 mb-3" style={{ background: 'rgba(0,0,0,0.2)' }}>
+              <p className="text-2xl font-black">You're leaving {pctLow}–{pctHigh}% of your monthly revenue on the table</p>
+            </div>
+            <p className="opacity-70 text-sm">every single month — without touching your ad spend</p>
+          </div>
+        )
+      })()}
 
       {/* What we find */}
       <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--shopify-white)', border: '1px solid var(--shopify-border)' }}>

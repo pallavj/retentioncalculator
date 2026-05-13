@@ -80,7 +80,12 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
 
           <div className="mt-8 p-6 rounded-xl bg-white/10 backdrop-blur">
             <p className="text-sm opacity-80 mb-1">You're leaving this much on the table every month:</p>
-            <p className="text-4xl font-bold">{formatRange(results.totalLow, results.totalHigh)}</p>
+            <p className="text-4xl font-bold mb-3">{formatRange(results.totalLow, results.totalHigh)}</p>
+            <div className="inline-block rounded-lg px-4 py-2 mb-2" style={{ background: 'rgba(0,0,0,0.2)' }}>
+              <p className="text-xl font-black">
+                That's {Math.round((results.totalLow / results.monthlyTotalRevenue) * 100)}–{Math.round((results.totalHigh / results.monthlyTotalRevenue) * 100)}% of your current monthly revenue — left on the table
+              </p>
+            </div>
             <p className="text-sm opacity-70 mt-1">without increasing your ad spend by a single rupee</p>
           </div>
         </div>
